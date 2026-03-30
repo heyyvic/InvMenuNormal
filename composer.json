@@ -4,7 +4,8 @@
     "type": "library",
     "license": "GPL-3.0",
     "require-dev": {
-        "pocketmine/pocketmine-mp": "^5.0.0"
+        "pocketmine/pocketmine-mp": "^5.0.0",
+        "cisco/multiversion-encoding": "dev-main"
     },
     "autoload": {
         "classmap": ["src"]
@@ -13,6 +14,12 @@
         {
             "name": "Muqsit",
             "email": "hackhack05@gmail.com"
+        }
+    ],
+    "repositories": [
+        {
+            "type": "vcs",
+            "url": "git@github.com:JoggingSplash/MultiVersion.git"
         }
     ],
     "extra": {

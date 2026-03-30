@@ -44,7 +44,9 @@ final class PlayerNetwork{
 	 * @param Closure(bool) : bool $then
 	 */
 	public function wait(int $type, Closure $then) : void{
-		$entry = $this->handler->createNetworkStackLatencyEntry($then);
+        /** @var \cisco\network\NetworkSession $network_session */
+        $network_session = $this->network_session;
+		$entry = $this->handler->createNetworkStackLatencyEntry($then, $network_session->getProtocol()->getProtocolId());
 		if($this->current !== null){
 			$this->queue->enqueue($entry);
 		}else{
@@ -111,7 +113,7 @@ final class PlayerNetwork{
 	}
 
 	public function notify(int $timestamp) : void{
-		if($this->current !== null && ($timestamp === $this->current->timestamp || $timestamp / 1000000 === $this->current->timestamp)){
+		if($this->current !== null && $timestamp === $this->current->timestamp){
 			$this->processCurrent(true);
 		}
 	}
