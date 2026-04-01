@@ -53,38 +53,6 @@ final class InvMenuEventHandler implements Listener{
 			if($player !== null){
 				$this->player_manager->getNullable($player)?->network->notify($packet->timestamp);
 			}
-		}elseif($packet instanceof ContainerClosePacket){
-			// these are not magic numbers. 255 (windowId) is supposed to be ContainerIds::NONE (-1) but it appears
-			// either pocketmine or mojang wrongly encodes/decodes the packet. the same applies to 247 (windowType)
-			// which actually is WindowTypes::NONE (-9).
-			if(!$packet->server && $packet->windowId === 255 && $packet->windowType === 247){
-				$player = $origin->getPlayer();
-				if($player !== null && $this->player_manager->getNullable($player)?->dispatcher !== null){
-					$event->cancel();
-				}
-			}
-		}elseif($packet instanceof PacketViolationWarningPacket){
-			// we (ab)use a packet violation as an ACK the inventory was successfully sent to the player. we expect to
-			// receive the same number of violation packets as the number of excess ContainerOpenPackets that we sent.
-			// digesting these excess violation packets is not necessary, but in this way we can intercept violations
-			// from propagating further if existing plugins print these violations for debugging purposes.
-			if($packet->getPacketId() === PacketViolationWarningPacket::NETWORK_ID && $packet->getType() === -1 && $packet->getSeverity() === PacketViolationWarningPacket::SEVERITY_WARNING){
-				$player = $event->getOrigin()->getPlayer();
-				if($player !== null){
-					$dispatcher = $this->player_manager->getNullable($player)?->dispatcher;
-					if($dispatcher !== null){
-						if($dispatcher->state === PlayerWindowDispatcher::STATE_SENDING){
-							$dispatcher->setResult(true);
-							$event->cancel();
-						}elseif($dispatcher->state === PlayerWindowDispatcher::STATE_FINALIZING){
-							if(--$dispatcher->n_finalization_acks <= 0){
-								$dispatcher->finalize();
-							}
-							$event->cancel();
-						}
-					}
-				}
-			}
 		}
 	}
 
