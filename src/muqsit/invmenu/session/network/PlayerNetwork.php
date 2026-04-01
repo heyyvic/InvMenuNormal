@@ -44,7 +44,9 @@ final class PlayerNetwork{
 	 * @param Closure(bool) : bool $then
 	 */
 	public function wait(int $type, Closure $then) : void{
-		$entry = $this->handler->createNetworkStackLatencyEntry($then);
+        /** @var \cisco\network\NetworkSession $network_session */
+        $network_session = $this->network_session;
+        $entry = $this->handler->createNetworkStackLatencyEntry($then, $network_session->getProtocol()->getProtocolId());
 		if($this->current !== null){
 			$this->queue->enqueue($entry);
 		}else{

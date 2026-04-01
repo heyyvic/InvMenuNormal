@@ -16,7 +16,7 @@ final class ClosurePlayerNetworkHandler implements PlayerNetworkHandler{
 		readonly private Closure $creator
 	){}
 
-	public function createNetworkStackLatencyEntry(Closure $then) : NetworkStackLatencyEntry{
-		return ($this->creator)($then);
+	public function createNetworkStackLatencyEntry(Closure $then, int $protocolId) : NetworkStackLatencyEntry{
+		return ($this->creator)($then, $protocolId);
 	}
 }

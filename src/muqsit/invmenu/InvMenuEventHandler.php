@@ -46,8 +46,10 @@ final class InvMenuEventHandler implements Listener{
 	 */
 	public function onDataPacketReceive(DataPacketReceiveEvent $event) : void{
 		$packet = $event->getPacket();
+        $origin = $event->getOrigin();
+
 		if($packet instanceof NetworkStackLatencyPacket){
-			$player = $event->getOrigin()->getPlayer();
+			$player = $origin->getPlayer();
 			if($player !== null){
 				$this->player_manager->getNullable($player)?->network->notify($packet->timestamp);
 			}
@@ -56,7 +58,7 @@ final class InvMenuEventHandler implements Listener{
 			// either pocketmine or mojang wrongly encodes/decodes the packet. the same applies to 247 (windowType)
 			// which actually is WindowTypes::NONE (-9).
 			if(!$packet->server && $packet->windowId === 255 && $packet->windowType === 247){
-				$player = $event->getOrigin()->getPlayer();
+				$player = $origin->getPlayer();
 				if($player !== null && $this->player_manager->getNullable($player)?->dispatcher !== null){
 					$event->cancel();
 				}
