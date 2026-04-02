@@ -102,14 +102,13 @@ final class PlayerWindowDispatcher{
 			// Legacy protocols (v419/v486) don't send the specific PacketViolationWarningPacket
 			// that the retry mechanism expects as ACK. The extra ContainerClose/Open packets
 			// from the retry loop desync PocketMine's InventoryManager, preventing future menus
-			// from opening. For these protocols, mark success immediately.
+			// from opening. For these protocols, skip the retry task entirely.
+			// Note: setResult(true) is called from InvMenu::send() AFTER $session->dispatcher is assigned.
 			$networkSession = $this->session->player->getNetworkSession();
-			if($networkSession instanceof \cisco\network\NetworkSession && ($proto = $networkSession->safeProtocol()) !== null && $proto->getProtocolId() <= 486){
-				$this->setResult(true);
-				return $packets;
+			$isLegacy = $networkSession instanceof \cisco\network\NetworkSession && ($proto = $networkSession->safeProtocol()) !== null && $proto->getProtocolId() <= 486;
+			if(!$isLegacy){
+				$this->task_handler = InvMenuHandler::getRegistrant()->getScheduler()->scheduleRepeatingTask(new ClosureTask($this->run(...)), 1);
 			}
-
-			$this->task_handler = InvMenuHandler::getRegistrant()->getScheduler()->scheduleRepeatingTask(new ClosureTask($this->run(...)), 1);
 			return $packets;
 		};
 		// Take priority over other container open callbacks.

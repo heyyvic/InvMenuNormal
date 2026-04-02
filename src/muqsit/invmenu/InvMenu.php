@@ -146,6 +146,16 @@ class InvMenu implements InvMenuTypeIds{
 		if($callback !== null){
 			$session->dispatcher->addCallback($callback);
 		}
+
+		// Legacy protocols (v419/v486) don't support the PacketViolation ACK mechanism
+		// used by the retry loop. Mark success now that $session->dispatcher is assigned,
+		// so finalize() can properly clean up the reference.
+		if($session->dispatcher->state === PlayerWindowDispatcher::STATE_SENDING){
+			$networkSession = $player->getNetworkSession();
+			if($networkSession instanceof \cisco\network\NetworkSession && ($proto = $networkSession->safeProtocol()) !== null && $proto->getProtocolId() <= 486){
+				$session->dispatcher->setResult(true);
+			}
+		}
 	}
 
 	public function handleInventoryTransaction(Player $player, Item $out, Item $in, SlotChangeAction $action, InventoryTransaction $transaction) : InvMenuTransactionResult{
