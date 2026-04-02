@@ -54,6 +54,7 @@ final class InvMenuEventHandler implements Listener{
 				$this->player_manager->getNullable($player)?->network->notify($packet->timestamp);
 			}
 		}elseif($packet instanceof ContainerClosePacket){
+            var_dump($packet);
             // these are not magic numbers. 255 (windowId) is supposed to be ContainerIds::NONE (-1) but it appears
             // either pocketmine or mojang wrongly encodes/decodes the packet. the same applies to 247 (windowType)
             // which actually is WindowTypes::NONE (-9).

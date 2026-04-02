@@ -4,10 +4,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="9a55d450-6f54-4c24-9c11-61571051b369" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/muqsit/invmenu/InvMenuEventHandler.php" beforeDir="false" afterPath="$PROJECT_DIR$/src/muqsit/invmenu/InvMenuEventHandler.php" afterDir="false" />
-    </list>
+    <list default="true" id="9a55d450-6f54-4c24-9c11-61571051b369" name="Changes" comment="" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -103,7 +100,7 @@
       <workItem from="1774909686228" duration="779000" />
       <workItem from="1775085050042" duration="1802000" />
       <workItem from="1775087165189" duration="527000" />
-      <workItem from="1775088156134" duration="312000" />
+      <workItem from="1775088156134" duration="424000" />
     </task>
     <servers />
   </component>
