@@ -19,7 +19,7 @@ final class PlayerNetworkHandlerRegistry{
 	public function __construct(){
         $multiplier = function (int $protocolId): int {
             return match($protocolId) {
-                419, 486 => 1000,
+                419, 486 => 1,
                 default => 1000000,
             };
         };
