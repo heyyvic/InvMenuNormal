@@ -1,36 +1,33 @@
 # InvMenu
-Create and manage virtual inventories in PocketMine-MP.
+**InvMenu is a PocketMine-MP virion that eases creating and managing fake inventories!**
+[![](https://poggit.pmmp.io/shield.state/InvMenu)](https://poggit.pmmp.io/p/InvMenu)
 
-## Installation and setup
-Download the compiled .phar file from [Poggit CI](https://poggit.pmmp.io/ci/Muqsit/InvMenu/~) and place it in your `virions/` folder.
-Read [installation](https://github.com/Muqsit/InvMenu/wiki/Installation) and [using in a plugin](https://github.com/Muqsit/InvMenu/wiki/Using-InvMenu-in-a-plugin)
-for a more elaborate guide on how to setup InvMenu library.
+## Installation
+You can get the compiled .phar file on poggit by clicking [here](https://poggit.pmmp.io/ci/Muqsit/InvMenu/~).
 
-> [!NOTE]
-> You must register `InvMenuHandler` before you can use InvMenu.
-> ```php
-> // in class MyPlugin extends PluginBase:
-> protected function onEnable() : void{
-> 	if(!InvMenuHandler::isRegistered()){
-> 		InvMenuHandler::register($this);
-> 	}
-> }
+## Usage
+InvMenu supports creating a GUI out of any kind of `Inventory`.
 
-## Create a virtual inventory
-Quick start, use `InvMenu::create(InvMenu::TYPE_CHEST)->send($player);` to display a virtual chest inventory to a player.
+**NOTE:** You MUST register `InvMenuHandler` during plugin enable before you can begin creating `InvMenu` instances.
+```php
+if(!InvMenuHandler::isRegistered()){
+	InvMenuHandler::register($this);
+}
+```
 
-`InvMenu::create($identifier)` creates an InvMenu instance. `$identifier` may be an identifier of a registered `InvMenuType` object.
-InvMenu comes with 3 pre-registered inventory types of different sizes:
-- `InvMenu::TYPE_CHEST` - a 27-slot normal chest inventory
-- `InvMenu::TYPE_DOUBLE_CHEST` - a 54-slot double chest inventory
-- `InvMenu::TYPE_HOPPER` - a 5-slot hopper inventory
+## Creating an InvMenu instance
+`InvMenu::create($identifier)` creates a new instance of InvMenu. `$identifier` must be an identifier of a registered `InvMenuType` object. InvMenu comes with 3 pre-registered `InvMenuType` identifiers: `InvMenu::TYPE_CHEST`, `InvMenu::TYPE_DOUBLE_CHEST` and `InvMenu::TYPE_HOPPER`.
 
 ```php
 $menu = InvMenu::create(InvMenu::TYPE_CHEST);
+```
+
+To access this menu's inventory, you can use:
+```php
 $inventory = $menu->getInventory();
 ```
 
-As `$inventory` implements [PocketMine's Inventory interface](https://github.com/pmmp/PocketMine-MP/blob/stable/src/inventory/Inventory.php), you get to access all the fancy PocketMine inventory methods.
+The `$inventory` implements pocketmine's `Inventory` interface, so you can access all the fancy pocketmine inventory methods.
 ```php
 $menu->getInventory()->setContents([
 	VanillaItems::DIAMOND_SWORD(),
@@ -39,65 +36,74 @@ $menu->getInventory()->setContents([
 $menu->getInventory()->addItem(VanillaItems::DIAMOND_AXE());
 $menu->getInventory()->setItem(3, VanillaItems::GOLD_INGOT());
 ```
-To send a menu to a player, use:
+To send the menu to a player, use:
 ```php
 /** @var Player $player */
 $menu->send($player);
 ```
-> [!TIP]
-> One `InvMenu` can be sent to multiple players—even 2 players in different worlds, so everyone views and edits the same inventory as if it were one chest.
+Yup, that's it. It's that simple.
 
-
-## Set a custom name
-There are two ways to name an InvMenu. You can either specify a global name (see method A), or you can set a name at the time you send the menu (see method B).
+## Specifying a custom name to the menu
+To set a custom name to a menu, use
 ```php
-$menu->setName("Custom Name"); // method A
-$menu->send($player, "Greetings, " . $player->getName()); // method B
+$menu->setName("Custom Name");
+```
+You can also specify a different menu name for each player separately during `InvMenu::send()`.
+```php
+/** @var Player $player */
+$menu->send($player, "Greetings, " . $player->getName());
 ```
 
-## Verify whether a menu is sent successfully
-`InvMenu::send()` is not guaranteed to succeed. A failure may arise from plugins cancelling InventoryOpenEvent, a disconnected player, or the player refusing the request (e.g., because they are in pause menu).
-Use the `$callback` parameter to verify whether a menu has been opened.
+## Verifying whether the menu was sent to the player
+Not a common occurrence but it's possible for plugins to disallow players from opening inventories.
+This can also occur as an attempt to drop garbage `InvMenu::send()` requests (if you send two menus simultaneously without any delay in betweeen, the first menu request may be regarded as garbage).
 ```php
-$menu->send($player, callback: function(bool $success) : void{
-	if($success){
-		// player is viewing the menu
+/** @var string|null $name */
+$menu->send($player, $name, function(bool $sent) : void{
+	if($sent){
+		// do something
 	}
 });
 ```
 
-## Monitor movement of items
-InvMenu comes with a listener whereby developers can write logic to monitor movement of items in and out of inventory, and thereby take action.
-A listener is a callback with the following signature:
+## Handling menu item transactions
+To handle item transactions happening to and from the menu's inventory, you may specify a `Closure` handler that gets triggered by `InvMenu` every time a transaction occurs. You may allow, cancel and do other things within this handler. To register a transaction handler to a menu, use:
+```php
+/** @var Closure $listener */
+$menu->setListener($listener);
+```
+What's **`$listener`**?
 ```php
 /**
  * @param InvMenuTransaction $transaction
  *
+ * Must return an InvMenuTransactionResult instance.
  * Return $transaction->continue() to continue the transaction.
  * Return $transaction->discard() to cancel the transaction.
  * @return InvMenuTransactionResult
  */
 Closure(InvMenuTransaction $transaction) : InvMenuTransactionResult;
 ```
-- `InvMenuTransaction::getPlayer()` returns the `Player` that triggered the transaction.
-- `InvMenuTransaction::getItemClicked()` returns the `Item` the player clicked in the menu. You may also use `InvMenuTransaction::getOut()`.
-- `InvMenuTransaction::getItemClickedWith()` returns the `Item` the player had in their hand when clicking an item. You may also use `InvMenuTransaction::getIn()`.
-- `InvMenuTransaction::getAction()` returns `SlotChangeAction` - you can get the slot that the player clicked in the menu.
-- `InvMenuTransaction::getTransaction()` returns the complete `InventoryTransaction` holding all the above information.
+`InvMenuTransaction` holds all the item transction data.<br>
+`InvMenuTransaction::getPlayer()` returns the `Player` that triggered the transaction.<br>
+`InvMenuTransaction::getItemClicked()` returns the `Item` the player clicked in the menu.<br>
+`InvMenuTransaction::getItemClickedWith()` returns the `Item` the player had in their hand when clicking an item.<br>
+`InvMenuTransaction::getAction()` returns a `SlotChangeAction` instance, to get the slot index of the item clicked from the menu's inventory.<br>
+`InvMenuTransaction::getTransaction()` returns the complete `InventoryTransaction` instance.<br>
 ```php
 $menu->setListener(function(InvMenuTransaction $transaction) : InvMenuTransactionResult{
 	$player = $transaction->getPlayer();
 	$itemClicked = $transaction->getItemClicked();
 	$itemClickedWith = $transaction->getItemClickedWith();
 	$action = $transaction->getAction();
-	$txn = $transaction->getTransaction();
+	$invTransaction = $transaction->getTransaction();
 	return $transaction->continue();
 });
 ```
-The listener below does not allow players to take out apples from the menu:
+A handler that doesn't allow players to take out apples from the menu's inventory:
 ```php
 $menu->setListener(function(InvMenuTransaction $transaction) : InvMenuTransactionResult{
-	if($transaction->getItemClicked()->getTypeId() === ItemTypeIds::APPLE){
+	if($transaction->getItemClicked()->getId() === ItemIds::APPLE){
 		$player->sendMessage("You cannot take apples out of that inventory.");
 		return $transaction->discard();
 	}
@@ -105,36 +111,38 @@ $menu->setListener(function(InvMenuTransaction $transaction) : InvMenuTransactio
 });
 ```
 
-There are two methods you can use to prevent players from editing the menu. Either create a listener that `discard()`s
-the transaction, or use `InvMenu::readonly()`.
+### Preventing inventory from being changed by players
+There are two ways you can go with to prevent players from modifying the inventory contents of a menu.
+#### Method #1: Calling `InvMenuTransaction::discard()`
 ```php
 $menu->setListener(function(InvMenuTransaction $transaction) : InvMenuTransactionResult{
+	// do something
 	return $transaction->discard();
 });
-
-$menu->setListener(InvMenu::readonly()); // equivalent shorthand of the above
-
-// you can also pass a callback in InvMenu::readonly()
+```
+#### Method #2: Using `InvMenu::readonly()`
+```php
+$menu->setListener(InvMenu::readonly());
+```
+```php
 $menu->setListener(InvMenu::readonly(function(DeterministicInvMenuTransaction $transaction) : void{
 	// do something
 }));
 ```
-Alternatively, you may choose to write your own `InventoryTransactionEvent` listener that works on transactions on
-`$menu->getInventory()`. However, an InvMenu listener is enough to fulfil most tasks.
+Based on your use-case, you may find one better than the other. While `Method #1` gives you full control over a transaction (you can conditionally cancel a transaction, f.e based on whether player has permission, or player is in a specific area etc), `Method #2` reduces boilerplate `InvMenuTransactionResult` imports and calls to `InvMenutransaction::discard()`.
 
-## Execute a task post-transaction
-Few actions are not possible to invoke at the time a player is viewing an inventory, such as sending a form—a player
-cannot view a form while viewing an inventory. Close the menu and utilize `InvMenuTransactionResult::then()` callback to
-achieve this.
+## Executing a task post-transaction
+A few actions are impossible to be done at the time a player is viewing an inventory, such as sending a form — a player won't be able to view a form while viewing an inventory. To do this, you will need to close the menu inventory and make sure they've closed it by waiting for a response from their side. You can do this by supplying a callback to `InvMenuTransactionResult::then()`.
 ```php
 $menu->setListener(function(InvMenuTransaction $transaction) : InvMenuTransactionResult{
 	$transaction->getPlayer()->removeCurrentWindow();
-	return $transaction->discard()->then(function(Player $player) : void{
+	return $transaction->discard()->then(function(Player $player) : void{ // $player === $transaction->getPlayer()
+		// assert($player->isOnline());
 		$player->sendForm(new Form());
 	});
 });
-
-// or if you are using InvMenu::readonly():
+```
+```php
 $menu->setListener(InvMenu::readonly(function(DeterministicInvMenuTransaction $transaction) : void{
 	$transaction->getPlayer()->removeCurrentWindow();
 	$transaction->then(function(Player $player) : void{
@@ -143,48 +151,42 @@ $menu->setListener(InvMenu::readonly(function(DeterministicInvMenuTransaction $t
 }));
 ```
 
-## Monitor menu close events
-Register an inventory close callback to run whenever a player closes the menu. An inventory close callback takes the
-following signature:
+## Listening players closing or no longer viewing the inventory
+To listen inventory close triggers, specify the inventory close Closure using:
+```php
+/** @var Closure $listener */
+$menu->setInventoryCloseListener($listener);
+```
+What's **`$listener`**?
 ```php
 /**
- * @param Player $player the player that closed the menu
- * @param Inventory $inventory the inventory of the menu
+ * @param Player $player the player who closed the inventory.
+ *
+ * @param Inventory $inventory the inventory instance closed by the player.
  */
 Closure(Player $player, Inventory $inventory) : void;
 ```
+To forcefully close or remove the menu from a player:
 ```php
-$menu->setInventoryCloseListener(function(Player $player, Inventory $inventory) : void{
-	$player->sendMessage("You are no longer viewing the menu.");
-});
+/** @var Player $player */
+$player->removeCurrentWindow();
 ```
-Inventory close listener is fired during both—server-initiated requests (i.e., `$player->removeCurrentWindow()`) and
-when the player closes the inventory on their end.
 
-## Advanced usage: Register a custom InvMenuType
-> [!IMPORTANT]
-> PocketMine does not register a dispenser block. As of PocketMine v5, the task of registering missing vanilla blocks is
-> excessively laborious and hence beyond the scope of this guide. [pmmp/RegisterBlocksDemoPM5](https://github.com/pmmp/RegisterBlocksDemoPM5)
-> has a nice guide on how to achieve this. **Still overwhelmed?** I wrote a [drag-n-drop example plugin](https://gist.github.com/Muqsit/8884e0f75b317c332a56e01740bbfe98)
-> that does all of it and registers a `/dispenser` command. With DevTools plugin installed, simply copy the code and
-> paste it in a new "DispenserInvMenuPlugin.php" file in your server's plugin folder.
-
-InvMenu does not provide a 9-slot dispenser inventory. But you can still achieve this by registering a dispenser InvMenuType.
-You'll need to specify inventory size, block actor identifier (tile identifier), and the window type (network property) for
-the creation of the graphic (block) and inventory parts.
+## Registering a custom InvMenu type
+So let's say you'd like to send players a dispenser inventory. While InvMenu doesn't ship with a `InvMenu::TYPE_DISPENSER`, you can still create a dispenser InvMenu by registering an `InvMenuType` object with the information about what a dispenser inventory looks like.
 ```php
 public const TYPE_DISPENSER = "myplugin:dispenser";
 
 protected function onEnable() : void{
 	InvMenuHandler::getTypeRegistry()->register(self::TYPE_DISPENSER, InvMenuTypeBuilders::BLOCK_ACTOR_FIXED()
-		->setBlock(ExtraVanillaBlocks::DISPENSER())
-		->setSize(9)
+		->setBlock(BlockFactory::getInstance()->get(BlockLegacyIds::DISPENSER, 0))
 		->setBlockActorId("Dispenser")
+		->setSize(9)
 		->setNetworkWindowType(WindowTypes::DISPENSER)
 	->build());
 }
 ```
-Sweet! Now you can create a dispenser menu using:
+Sweet! Now you can create a dispenser menu using
 ```php
 $menu = InvMenu::create(self::TYPE_DISPENSER);
 ```

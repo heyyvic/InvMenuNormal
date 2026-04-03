@@ -21,7 +21,10 @@ final class MultiBlockInvMenuGraphic implements PositionedInvMenuGraphic{
 
 	private function first() : PositionedInvMenuGraphic{
 		$first = current($this->graphics);
-		$first !== false || throw new LogicException("Tried sending inventory from a multi graphic consisting of zero entries");
+		if($first === false){
+			throw new LogicException("Tried sending inventory from a multi graphic consisting of zero entries");
+		}
+
 		return $first;
 	}
 
