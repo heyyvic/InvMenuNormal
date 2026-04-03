@@ -18,10 +18,7 @@ final class PlayerNetworkHandlerRegistry{
 
 	public function __construct(){
         $multiplier = function (int $protocolId): int {
-            return match($protocolId) {
-                419, 486 => 1000,
-                default => 1000000,
-            };
+            return 1000;
         };
 		$this->registerDefault(new ClosurePlayerNetworkHandler(static function(Closure $then, int $protocolId) use ($multiplier) : NetworkStackLatencyEntry{
 			$timestamp = mt_rand();
