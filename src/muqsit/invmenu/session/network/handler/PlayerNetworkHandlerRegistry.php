@@ -17,16 +17,12 @@ final class PlayerNetworkHandlerRegistry{
 	private array $game_os_handlers = [];
 
 	public function __construct(){
-        $multiplier = function (int $protocolId): int {
-            return 1000;
-        };
-		$this->registerDefault(new ClosurePlayerNetworkHandler(static function(Closure $then, int $protocolId) use ($multiplier) : NetworkStackLatencyEntry{
-			$timestamp = mt_rand();
-			return new NetworkStackLatencyEntry($timestamp * $multiplier($protocolId), $then);
+		$this->registerDefault(new ClosurePlayerNetworkHandler(static function(Closure $then) : NetworkStackLatencyEntry{
+			return new NetworkStackLatencyEntry(mt_rand() * 1000, $then);
 		}));
-		$this->register(DeviceOS::PLAYSTATION, new ClosurePlayerNetworkHandler(static function(Closure $then, int $protocolId) use ($multiplier) : NetworkStackLatencyEntry{
-			$timestamp = mt_rand();
-			return new NetworkStackLatencyEntry($timestamp * $multiplier($protocolId), $then, $timestamp * 1000);
+		$this->register(DeviceOS::PLAYSTATION, new ClosurePlayerNetworkHandler(static function(Closure $then) : NetworkStackLatencyEntry{
+            $timestamp = mt_rand();
+            return new NetworkStackLatencyEntry($timestamp, $then, $timestamp * 1000);
 		}));
 	}
 
