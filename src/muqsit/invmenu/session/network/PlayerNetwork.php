@@ -106,7 +106,6 @@ final class PlayerNetwork{
         /** @var \cisco\network\NetworkSession $network_session */
         $network_session = $this->network_session;
         $entry = $this->handler->createNetworkStackLatencyEntry($then, $network_session->getProtocol()->getProtocolId());
-		$entry = $this->handler->createNetworkStackLatencyEntry($then);
 		if($this->current !== null){
 			$this->queue->enqueue($entry);
 			$this->entry_types[spl_object_id($entry)] = $type;
