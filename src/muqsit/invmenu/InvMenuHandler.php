@@ -8,6 +8,9 @@ use InvalidArgumentException;
 use LogicException;
 use muqsit\invmenu\session\PlayerManager;
 use muqsit\invmenu\type\InvMenuTypeRegistry;
+use muqsit\simplepackethandler\SimplePacketHandler;
+use pocketmine\network\mcpe\NetworkSession;
+use pocketmine\network\mcpe\protocol\ContainerClosePacket;
 use pocketmine\plugin\Plugin;
 use pocketmine\Server;
 
@@ -23,6 +26,18 @@ final class InvMenuHandler{
 		self::$type_registry = new InvMenuTypeRegistry();
 		self::$player_manager = new PlayerManager(self::getRegistrant());
 		Server::getInstance()->getPluginManager()->registerEvents(new InvMenuEventHandler(self::getPlayerManager()), $plugin);
+
+        static $send = false;
+        SimplePacketHandler::createInterceptor($plugin)
+            ->interceptIncoming(static function(ContainerClosePacket $packet, NetworkSession $session) use(&$send) : bool{
+                $send = true;
+                $session->sendDataPacket($packet);
+                $send = false;
+                return true;
+            })
+            ->interceptOutgoing(static function(ContainerClosePacket $packet, NetworkSession $session) use(&$send) : bool{
+                return $send;
+            });
 	}
 
 	public static function isRegistered() : bool{
