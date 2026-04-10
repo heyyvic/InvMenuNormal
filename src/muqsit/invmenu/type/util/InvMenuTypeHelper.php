@@ -17,12 +17,7 @@ final class InvMenuTypeHelper{
 	public const NETWORK_WORLD_Y_MAX = 320;
 
 	public static function getBehindPositionOffset(Player $player) : Vector3{
-		$offset = $player->getDirectionVector();
-		$size = $player->size;
-		$offset->x *= -(1 + $size->getWidth());
-		$offset->y *= -(1 + $size->getHeight());
-		$offset->z *= -(1 + $size->getWidth());
-		return $offset;
+		return new Vector3(0, -3, 0);
 	}
 
 	public static function isValidYCoordinate(float $y) : bool{
