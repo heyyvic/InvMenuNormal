@@ -38,7 +38,8 @@ final class InvMenuTypeHelper{
 			foreach($sides as $side){
 				$pos = $position->getSide($side);
 				$tile = $world->getTileAt($pos->x, $pos->y, $pos->z);
-				if($tile instanceof Chest && $tile->getPair() !== null){
+				if($tile instanceof Chest){
+                    var_dump($world->getTileAt($pos->x + 1, $pos->y, $pos->z));
 					yield $pos;
 				}
 			}
