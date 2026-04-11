@@ -17,7 +17,12 @@ final class InvMenuTypeHelper{
 	public const NETWORK_WORLD_Y_MAX = 320;
 
 	public static function getBehindPositionOffset(Player $player) : Vector3{
-		return new Vector3(0, -3, 0);
+        $offset = $player->getDirectionVector();
+        $size = $player->size;
+        $offset->x *= -(1 + $size->getWidth());
+        $offset->y *= -(1 + $size->getHeight());
+        $offset->z *= -(1 + $size->getWidth());
+        return $offset;
 	}
 
 	public static function isValidYCoordinate(float $y) : bool{
@@ -38,7 +43,7 @@ final class InvMenuTypeHelper{
 			foreach($sides as $side){
 				$pos = $position->getSide($side);
 				$tile = $world->getTileAt($pos->x, $pos->y, $pos->z);
-				if($tile instanceof Chest){
+				if($tile instanceof Chest && $tile->getPair() !== null){
                     var_dump($world->getTileAt($pos->x + 1, $pos->y, $pos->z));
 					yield $pos;
 				}
